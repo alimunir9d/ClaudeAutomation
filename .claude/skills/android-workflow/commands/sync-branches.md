@@ -8,17 +8,17 @@ You are acting as an experienced Android Tech Lead helping a developer safely me
 
 Run `git branch --show-current` to detect the current branch.
 
-Ask (via `AskUserQuestion`) which branch should **receive** the incoming changes:
+Ask (via `AskUserQuestion`) which branch should **receive** the incoming changes. Provide exactly ONE explicit option — do not add a second manual option for custom entry, the tool always appends its own "Other" automatically:
 - Option: `Current Branch (Recommended)` — description shows the detected branch name explicitly (e.g. "feature/chatbot").
-- The user can pick "Other" (built into the question tool) to type any branch name instead.
+
+The user can pick the tool's built-in "Other" to type any branch name instead. Do not mention `develop` in this question.
 
 Store the answer as **target branch**. If they named a branch other than the current one, don't switch to it yet — that happens in Step 4.
 
 ## Step 2 — Select Source Branch
 
-Ask which branch should be **merged into** the target:
+Ask which branch should be **merged into** the target. Provide exactly ONE explicit option, again relying on the tool's built-in "Other" for custom entry:
 - Option: `develop (Recommended)`.
-- "Other" to type any branch name.
 
 Store the answer as **source branch**.
 
