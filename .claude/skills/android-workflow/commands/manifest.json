@@ -1,10 +1,10 @@
 {
   "commands": [
     {
-      "id": "pull-develop",
-      "title": "Pull latest from develop",
-      "description": "Pull the latest changes from develop into your current working branch.",
-      "file": "pull-develop.md",
+      "id": "sync-branches",
+      "title": "Sync Branches",
+      "description": "Safely merge one branch into another, with interactive conflict resolution.",
+      "file": "sync-branches.md",
       "status": "active"
     },
     {
