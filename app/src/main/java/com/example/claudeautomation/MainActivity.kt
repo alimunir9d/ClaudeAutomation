@@ -17,9 +17,4 @@ class MainActivity : AppCompatActivity() {
             insets
         }
     }
-
-    fun send(j: Int): Int {
-        val i = j + 1
-        return i
-    }
 }
