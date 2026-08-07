@@ -1,0 +1,18 @@
+{
+  "commands": [
+    {
+      "id": "pull-develop",
+      "title": "Pull latest from develop",
+      "description": "Pull the latest changes from develop into your current working branch.",
+      "file": "pull-develop.md",
+      "status": "active"
+    },
+    {
+      "id": "ai-pr-review",
+      "title": "AI PR Review",
+      "description": "Review the diff between a source branch and a target branch (default: develop).",
+      "file": "ai-pr-review.md",
+      "status": "active"
+    }
+  ]
+}
