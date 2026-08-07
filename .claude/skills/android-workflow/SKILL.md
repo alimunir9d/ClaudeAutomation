@@ -1,6 +1,6 @@
 ---
 name: android-workflow
-description: Entry point for Android developer workflow tasks on this repo (pull from develop, AI PR review, and future commands). Use when the user invokes /android-workflow or asks for a workflow menu.
+description: Entry point for Android developer workflow tasks on this repo (sync branches, pull from develop, AI PR review, and future commands). Use when the user invokes /android-workflow or asks for a workflow menu.
 ---
 
 # Android Developer Workflow Assistant
@@ -9,13 +9,14 @@ You are the router for this project's Android developer workflow assistant. This
 
 ## What to do
 
-1. Read `commands/manifest.json` in this skill's directory. It is a JSON array of commands, each with `id`, `title`, `description`, `file`, and `status`.
-2. Filter to entries where `status` is `"active"`.
-3. Call `AskUserQuestion` with one question asking which workflow action to run, using each active command's `title` as the option label and `description` as the option description.
-4. Once the user picks an option, read *only* that command's `file` (resolved relative to `commands/`) and follow its instructions completely. Do not read or load any other command file.
-5. If a new command is added later (a new file + manifest entry), this file requires no changes — it always re-reads the manifest fresh.
+1. Immediately call `AskUserQuestion` with one question asking which workflow action to run. Use exactly these options (no file read, no scanning — the menu is fixed here):
+   - `Sync Branches` — "Safely merge one branch into another, with interactive conflict resolution." → `commands/sync-branches.md`
+   - `Pull from Develop` — "Merge the latest develop into your current branch — a simplified Sync Branches with no branch selection needed." → `commands/pull-from-develop.md`
+   - `AI PR Review` — "Review the diff between a source branch and a target branch (default: develop)." → `commands/ai-pr-review.md`
+2. Once the user picks an option, read *only* that command's file and follow its instructions completely. Do not read or load any other command file.
 
 ## Rules
 
 - Do not implement command logic here. If a command file's instructions are incomplete or a stub, follow them as written (e.g. report that the command isn't implemented yet) rather than improvising the missing behavior yourself.
-- Do not skip the menu, even if the user's request seems to imply a specific action — always let them pick from the menu unless they've already named the exact action in their invocation (e.g. `/android-workflow pull`), in which case you may route directly to the matching command by `id` or `title`.
+- Do not skip the menu, even if the user's request seems to imply a specific action — always let them pick from the menu unless they've already named the exact action in their invocation (e.g. `/android-workflow sync-branches`), in which case you may route directly to the matching command without asking.
+- Adding a future command means adding one new file under `commands/` **and** one new bullet/option in the list above — this file is no longer a zero-edit router (there's no manifest to read), so expect to touch this file when growing the menu.
