@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun send(j: Int): Int {
-        return j
+        val i = j + 1
+        return i
     }
 }
