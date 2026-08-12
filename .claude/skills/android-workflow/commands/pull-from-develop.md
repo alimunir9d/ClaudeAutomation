@@ -28,8 +28,8 @@ Ask for explicit confirmation (`AskUserQuestion`, Yes/No) before making any git 
 
 ## Step 3 — Reuse Sync Branches for everything else
 
-On confirmation, open `commands/sync-branches.md` in this same skill and continue with **Step 4 through Step 7 exactly as written there**, substituting:
+On confirmation, open `commands/sync-branches.md` in this same skill and continue with **Step 4 through Step 8 exactly as written there**, substituting:
 - `<target>` = the detected current branch
 - `<source>` = `develop`
 
-Do not re-implement or duplicate the fetch/merge/conflict-detection/intelligent-resolution logic here — follow `sync-branches.md`'s Steps 4–7 and its Safety Rules section verbatim. This file only exists to skip Sync Branches' Steps 1–3 (branch selection) with a fixed choice.
+Do not re-implement or duplicate the fetch/merge/conflict-detection/intelligent-resolution/finalization logic here — follow `sync-branches.md`'s Steps 4–8 and its Safety Rules section verbatim. Step 8 is not optional: this command ends only when the merge is committed and the developer knows which branch they're on. This file only exists to skip Sync Branches' Steps 1–3 (branch selection) with a fixed choice.
