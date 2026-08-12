@@ -49,9 +49,9 @@ Then, in order:
 ## Step 5 — No Conflicts
 
 If the merge completes cleanly:
+- Git has already created the merge commit itself — say so explicitly, so the developer knows there is nothing pending.
 - Report success with a short summary (files changed, commit count merged in).
-- Tell the developer the branch is ready to review, commit (if merge produced a commit, it's already committed — just say so), and push.
-- Do not push automatically — pushing is a separate, explicit action the developer should trigger themselves.
+- Go to **Step 8** to finalize and hand back. Do not push automatically — pushing is a separate, explicit action the developer should trigger themselves.
 
 ## Step 6 — Merge Conflicts Detected
 
@@ -67,6 +67,7 @@ Ask via `AskUserQuestion`:
 - Suggest a name: `<target>-merge-<source>` (e.g. `feature/chatbot-merge-develop`), let the developer edit it (free-text follow-up).
 - Abort the in-progress merge on the target (`git merge --abort`), create the temp branch from the target (`git checkout -b <temp-name> <target>`), then redo the merge (`git merge <source>`) inside the temp branch.
 - This keeps `<target>` untouched until the merge is verified. Tell the developer explicitly that their original branch is safe and where the merge is now happening.
+- Remember that a temp branch was used — **Step 8 is responsible for bringing it back into `<target>`**. A temp branch is a detour, not a destination; never end the command leaving the developer parked on it without a decision.
 
 ## Step 7 — Intelligent Conflict Resolution
 
@@ -82,10 +83,36 @@ Go through every conflicted file individually (`git diff --name-only --diff-filt
 - Ask the developer (`AskUserQuestion`) which behavior to keep — or whether to keep both under some condition.
 - Wait for their answer before touching that file. Move on to other conflicts while waiting is fine, but do not finalize the merge until every Case 3 conflict has been answered.
 
-After all conflicts are resolved, stage the resolved files, and report a final summary — same shape as Step 5 — including which conflicts were auto-merged (Case 1/2) and which required a developer decision (Case 3), with the decision made.
+After every conflict has been resolved, close the merge out — do not stop at staging:
+
+1. Stage each resolved file (`git add <file>`).
+2. Verify nothing is still conflicted: `git diff --name-only --diff-filter=U` must come back empty. If it doesn't, you missed a file — go back and finish it.
+3. **Conclude the merge with a commit** (`git commit --no-edit`). A conflicted merge is *not* auto-committed by git — if you skip this, `MERGE_HEAD` stays on disk, the IDE keeps showing a "Merging <branch>" banner, and the developer is stranded mid-merge. Committing here is required, not optional, and does **not** count as the "commit only when asked" exception: the developer already authorized this merge in Step 3.
+4. Confirm the merge actually closed: `git rev-parse -q --verify MERGE_HEAD` must return nothing.
+
+Note: if every Case 3 decision kept the target's side, the merge commit can legitimately contain **no file changes** — `git status` will look empty while the merge is still pending. That is normal; still commit, and say so, otherwise it reads like nothing happened.
+
+Then report which conflicts were auto-merged (Case 1/2) and which required a developer decision (Case 3), with the decision made, and continue to Step 8.
+
+## Step 8 — Finalize and Hand Back
+
+Never end this command with the repository in an in-between state. Before reporting, `MERGE_HEAD` must be gone and the developer must know exactly which branch they are standing on.
+
+**If the merge happened directly in `<target>`** (no temp branch): report the final summary — files changed, commits merged in, branch name — and tell them it's ready to review and push. Done.
+
+**If a temp branch was used** (Step 6, option 2): the merge is committed there, but `<target>` still doesn't have it. Ask (`AskUserQuestion`) how to bring it back:
+
+1. `Merge into <target> now (Recommended)` — `git checkout <target>` then `git merge --ff-only <temp-name>`. This is guaranteed to fast-forward because the temp branch was created from `<target>` and `<target>` hasn't moved. If `--ff-only` fails, `<target>` moved underneath you — stop, do not force it, and tell the developer what happened.
+2. `Keep <temp-name> for review / open a PR` — leave `<target>` untouched and stay on the temp branch. Say plainly that `<target>` does **not** yet contain the merge and name the exact command they'll need later (`git checkout <target> && git merge --ff-only <temp-name>`).
+
+If option 1 was taken, also ask whether to delete the now-redundant temp branch (`git branch -d <temp-name>` — the safe `-d`, never `-D`). Default to keeping it if they don't care.
+
+Finish with a final state report: current branch, whether `<target>` contains the merge, whether the temp branch still exists, and the fact that nothing was pushed.
 
 ## Safety Rules (apply throughout)
 
+- Never leave the repository mid-merge. Every path out of this command ends with either a completed merge commit or an explicit `git merge --abort` — never a dangling `MERGE_HEAD`.
+- Never leave the developer on a temp branch without telling them `<target>` doesn't have the merge yet and how to get it there.
 - Never overwrite business logic automatically — only Case 1/2 conflicts get auto-resolved, and both must be genuinely unambiguous.
 - Never discard developer code automatically — if in doubt whether something is dead code or intentional, treat it as intentional and ask.
 - Always explain non-trivial decisions as you make them, not just at the end.
