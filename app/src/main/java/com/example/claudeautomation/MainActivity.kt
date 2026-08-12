@@ -17,4 +17,8 @@ class MainActivity : AppCompatActivity() {
             insets
         }
     }
+    private fun sendMsg(msg: String): String
+    {
+        return "Hi $msg"
+    }
 }
