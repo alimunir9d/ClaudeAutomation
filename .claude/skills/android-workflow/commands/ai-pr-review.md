@@ -166,6 +166,7 @@ Say so explicitly rather than going quiet. For Generic, state that no major code
 
 ## Safety Rules (apply throughout)
 
+- **A skipped question ends the command.** If the developer presses Skip on any of Steps 1–3, or the answer comes back as `[No preference]` or empty, stop and say so — never fall back to `develop (Recommended)` or `Current Branch (Recommended)`, never guess the review type, and never produce a review nobody scoped. Nothing needs cleanup, since the command is read-only. **One exception:** Step 4's optional-context question explicitly offers skipping as a valid answer meaning "no additional context" — that one continues the review as normal.
 - **Read-only, always.** No `checkout`, `merge`, `rebase`, `commit`, `stash`, `reset`, or `push`. `git fetch origin` is the only command that writes anything, and it writes only remote-tracking refs. The developer's branch and working tree must be exactly as they were when the command started.
 - Never review uncommitted work silently — a branch diff cannot see it, so say so in Step 0 instead of letting the developer assume it was covered.
 - Never treat developer-supplied context as proof of correctness.

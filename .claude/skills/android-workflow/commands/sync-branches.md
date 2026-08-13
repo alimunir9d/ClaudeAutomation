@@ -111,6 +111,10 @@ Finish with a final state report: current branch, whether `<target>` contains th
 
 ## Safety Rules (apply throughout)
 
+- **A skipped question ends the command.** If the developer presses Skip, or the answer comes back as `[No preference]` or empty, stop — never substitute the `(Recommended)` option, never infer the branch or resolution they "probably" wanted, never re-ask the same question in different words. What "stop" requires depends on where you are, because this command can be mid-operation:
+  - **Steps 1–3** (branch selection, confirmation) — nothing has been touched. Stop outright and say so.
+  - **Step 6** (conflict handling) or **Step 7 Case 3** (business-logic conflict) — a merge is in progress, so stopping is an action, not inaction. Do not guess a resolution and do not leave `MERGE_HEAD` dangling: run `git merge --abort` to return to the pre-merge state, verify with `git rev-parse -q --verify MERGE_HEAD` that it came back empty, then report that the merge was abandoned and nothing was resolved. If the abort itself fails, say so plainly and give the developer the exact command to run.
+  - **Step 8** (bringing a temp branch back) — the merge is already committed on the temp branch, so there is nothing to abort. Stop, and report plainly that `<target>` does **not** contain the merge, naming the temp branch and the exact command to finish later (`git checkout <target> && git merge --ff-only <temp-name>`).
 - Never leave the repository mid-merge. Every path out of this command ends with either a completed merge commit or an explicit `git merge --abort` — never a dangling `MERGE_HEAD`.
 - Never leave the developer on a temp branch without telling them `<target>` doesn't have the merge yet and how to get it there.
 - Never overwrite business logic automatically — only Case 1/2 conflicts get auto-resolved, and both must be genuinely unambiguous.
