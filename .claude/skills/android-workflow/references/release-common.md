@@ -29,7 +29,7 @@ Every `AskUserQuestion` in these workflows is a real gate. If the developer does
 
 ## §1 — Remote-only contract
 
-Both release commands treat the **remote repository as the single source of truth**. The developer's local clone is a lens for reading remote refs, never a staging area.
+Where branch state comes from is the tree-wide rule in `references/git-common.md` **§G1**, and how it is refreshed is **§G2**. Read those; this section does not restate them. What follows is the part specific to the release commands: they not only *read* from the remote, they never write anywhere else either. The developer's local clone is a lens for reading remote refs, never a staging area.
 
 Never run any of these as part of a release command:
 
@@ -41,12 +41,12 @@ Never run any of these as part of a release command:
 
 Permitted git commands are read-only or ref-only:
 
-- `git fetch origin --prune --tags` — the **only** command that writes anything, and it writes remote-tracking refs and tags, never the working tree or a local branch. This is the same boundary `commands/ai-pr-review.md` Step 0 already establishes.
+- `git fetch origin --prune --tags` — the canonical refresh (`git-common.md` §G2) and the **only** command here that writes anything, and it writes remote-tracking refs and tags, never the working tree or a local branch. This is the same boundary `commands/ai-pr-review.md` Step 0 already establishes.
 - `git show origin/<branch>:<path>` — read a file's content as it exists on the remote.
 - `git rev-parse origin/<branch>`, `git rev-parse origin/<branch>:<path>` — resolve a commit sha or a blob sha.
 - `git log`, `git diff`, `git ls-remote`, `git merge-base` — always against `origin/...` refs.
 
-Never read local `develop` or local `main`. In this clone they are routinely stale (local `develop` has sat behind its remote for several commits), and a release built from a stale local ref would ship the wrong code. Always write `origin/develop` and `origin/main` explicitly — a bare `develop` in any command in these workflows is a bug.
+Never read local `develop` or local `main` (`git-common.md` §G1). In this clone they are routinely stale (local `develop` has sat behind its remote for several commits), and a release built from a stale local ref would ship the wrong code. Always write `origin/develop` and `origin/main` explicitly — a bare `develop` in any command in these workflows is a bug. Unlike the branch commands, there is no local half here: these commands have no local operation to perform, so a local ref has no legitimate role at all.
 
 The developer's current branch and working-tree state are irrelevant to both commands. Say so in preflight so they know it is safe to run mid-task, and never ask them to commit, stash, or switch branches.
 
@@ -78,8 +78,12 @@ Run this before anything else in either command.
    - HTTPS form `https://github.com/<owner>/<repo>.git`
 
    Strip any trailing `.git`. If the remote is not a GitHub URL, stop — these commands are GitHub-specific.
-3. **Refresh remote state.** `git fetch origin --prune --tags`. Do this even if the session already fetched: both commands make decisions from remote refs, and a stale ref produces a wrong version, wrong notes, or a tag on the wrong commit.
+3. **Refresh remote state.** `git fetch origin --prune --tags`, per `git-common.md` **§G2**. Do this even if the session already fetched: both commands make decisions from remote refs, and a stale ref produces a wrong version, wrong notes, or a tag on the wrong commit.
+
+   **Check the fetch's exit status.** Non-zero → **`git-common.md` §G4 (Gate B)**: report the error verbatim and offer exactly `Retry` / `Cancel`. Do not continue on cached refs, and do not offer local branches — for these commands there is no acceptable local substitute (§1), and §8 is not a valid destination either, because it needs a successful fetch of its own.
 4. **Verify the branches exist on the remote.** `git rev-parse --verify origin/develop` and `git rev-parse --verify origin/main`. If either fails, say which one and stop — never guess at a near-match name like `dev` or `master`.
+
+   This is an existence check, not a freshness check: per §G2 it succeeds on cached refs from any earlier fetch, however old. It is step 3's exit status that establishes the state is current, so passing this step is never a reason to skip that one.
 5. **Report the developer's local state as untouched.** `git branch --show-current` — mention it once, explicitly framed as "this branch will not be touched." Do not run `git status` gates; uncommitted local work is irrelevant here because nothing local is read or written.
 
 ## §3 — Version detection ladder
@@ -173,7 +177,7 @@ This writes `README.md` on remote `develop` through the GitHub Contents API. It 
    In PowerShell, encode with `[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-Content <file> -Raw)))`.
 
    Omit `-f sha=...` **only** in the create case. When the file exists, `sha` is mandatory: it makes the call fail rather than clobber if `develop` moved after the fetch. If the call returns a 409/422 conflict, `develop` advanced underneath the workflow — re-fetch, re-read, rebuild, and show the developer what changed before retrying. Never retry by dropping `sha`.
-5. **Confirm it landed.** The response contains the new commit sha — report it. Then `git fetch origin` and verify `origin/develop` advanced to it.
+5. **Confirm it landed.** The response contains the new commit sha — report it. Then `git fetch origin --prune --tags` (§G2) and verify `origin/develop` advanced to it.
 
 ## §7 — Remote GitHub operations
 
@@ -222,11 +226,13 @@ If any `gh` call fails, report the actual error text and stop. Do not retry with
 
 Reached from §2 when `gh` is missing or unauthenticated, and the developer would rather proceed now than install it.
 
+**Precondition: the fetch in §2 step 3 succeeded.** This fallback exists for a missing *tool*, not for a missing *remote*. Everything below reads remote refs, so if the fetch is what failed, this section is unreachable — §G4 (Gate B) offers `Retry` / `Cancel` and stops there. A paste-ready README and a set of release notes built from stale cached refs would be worse than no fallback at all, because they look finished.
+
 Do **not** substitute local git operations. The remote-only contract (§1) still holds — a fallback that checks out `develop` and commits locally is worse than no fallback, because it silently changes what the developer asked for.
 
 Instead, do all the work that does not require the API, and hand over everything pre-built:
 
-1. Version detection (§3) and release notes (§4, §5) run normally — they are read-only and need only `git fetch`.
+1. Version detection (§3) and release notes (§4, §5) run normally — they are read-only and need only the successful fetch this section already requires.
 2. Print the **complete new README content** in a fenced block, ready to paste into GitHub's web editor on the `develop` branch, along with the commit message `chore(release): prepare release <version>`.
 3. Print the compare URL to open the PR from:
 
@@ -251,6 +257,6 @@ Apply to both release commands, at every step:
 - **Never invent release notes.** Every line traces to the diff (§4), or comes from the developer, or comes from the already-confirmed notes of this release (§5). "Do not invent" outranks "produce complete-looking notes" — thin but true beats rich but fabricated.
 - **Never modify any file other than `README.md`.** No version bump in any module's `build.gradle(.kts)`, no `gradle.properties`, no CHANGELOG unless the developer explicitly asks for it as a separate action.
 - **Never touch local branches or the working tree** (§1). The developer must end both commands standing exactly where they started, with the same uncommitted work they had.
-- **Never assume local refs are current.** Read `origin/...` refs only, after an explicit fetch.
+- **Never assume local refs are current** (`git-common.md` §G1). Read `origin/...` refs only, after a fetch that actually succeeded — a ref resolving is not evidence it is fresh (§G2). If the fetch fails, §G4 (Gate B) stops the command; never continue on cached refs and never offer a local substitute.
 - **Confirm before every irreversible remote action** — the README commit, the PR creation, the tag creation, the release creation. Show what is about to happen with the concrete values, and wait for a yes.
 - **Report failures verbatim.** If a `gh` call fails, show the error and stop. Do not paper over it, do not retry with weakened flags, and never report a step as done when it errored.

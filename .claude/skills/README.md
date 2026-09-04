@@ -16,7 +16,7 @@ android-workflow/commands/*.md ──┤
 
 - `SKILL.md` — the router. Holds the main menu and the group follow-up menus. **This is the single source of truth for every menu.**
 - `commands/*.md` — one file per executable command. **This is the single source of truth for every workflow.** Each file owns its steps, questions, and safety rules.
-- `references/*.md` — shared logic that command files pull in by section number (`§N`). Never dispatched to directly.
+- `references/*.md` — shared logic that command files pull in by section number (`§N`). Never dispatched to directly. Three of them: `git-common.md` (branch/remote rules for every git-dependent command, cited as `§G0`–`§G6` — the `G` prefix keeps citations unambiguous for a command that reads two references), `release-common.md`, and `strings-common.md`.
 
 **Every other directory here is a direct entry point** — a thin pointer that exists only so a command can be run without walking the menu. There are ten:
 
@@ -91,4 +91,5 @@ Anything added here runs in other people's Android projects, so it must not enco
 - **Detect, never assume** — the project name, module names, source sets, package names, resource layout, version scheme, branch names, and git remote all vary. Read them from the project at run time; ask when detection is ambiguous.
 - **Never emit a name you did not detect.** A hardcoded project name written into another repository's files is the worst failure mode this tree has, because it is silent and it lands in a commit.
 - **Guard the entry.** Android commands verify a Gradle root and a resource tree; git-only commands verify a git repository. Either way, an unsuitable project means stop cleanly, explain what was expected, and change nothing.
+- **Decide whether the command reads branch contents, and be consistent about it.** If it does — a diff, a review, a merge, a release decision — it reads `android-workflow/references/git-common.md`, adds itself to that file's §G0 routing table, takes its branch state from `origin/...` refs, and cites exactly one failure gate (§G3 or §G4). If it doesn't — a command that only reads and writes files in the working project, as Sync Strings does — it must **not** fetch, read remote refs, or ask about remote access, and it says so where its own shared logic lives. Remote-first is a rule about where branch state comes from, not a network dependency to hand every new command.
 - **Stay Android-specific.** These are Android tools. Generalizing them to other platforms is out of scope; being usable in *any Android project* is the goal.

@@ -6,6 +6,8 @@ This file is **not** a menu command. It is never dispatched to directly; it is p
 
 Both commands are Android-specific and operate on `strings.xml` resources. **English is always the source of truth.**
 
+**Both commands are purely local.** They read and write files in the developer's working project and nothing else. They do not use git, do not read remote branches, do not fetch, and must never ask the developer about remote access or repository state. The remote-first rule in `references/git-common.md` does **not** apply here: it governs commands whose decisions are based on the contents of a branch, and these commands compare resource files on disk. "English is the source of truth" is a statement about which *file* wins, not about which *ref* wins — do not generalize the tree's git rules onto it, and do not add a remote-availability gate to a workflow that never needed the network.
+
 ## §0 — Answering questions and skipping
 
 Every `AskUserQuestion` in these workflows is a real gate. If the developer does not select an option, **stop the entire command immediately.**
