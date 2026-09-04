@@ -12,6 +12,7 @@ Prioritize correctness and meaningful risk over the number of comments. Follow t
 
 This command is **read-only**. It never checks out, merges, commits, stashes, or pushes anything. Say so up front, so the developer knows it is safe to run mid-task.
 
+0. `git rev-parse --is-inside-work-tree` — confirm this is a git repository. If it is not, **stop cleanly**, say so, and review nothing. This command is a diff tool, so a git repository is the only requirement; it does not need an Android project.
 1. `git fetch origin` — refresh remote-tracking refs so a review against `develop` isn't stale. This touches refs only, never the working tree.
 2. `git branch --show-current` — note the current branch for the Step 2 default.
 3. `git status --short` — if the working tree is dirty, tell the developer plainly that **uncommitted changes are not part of this review** (the diff is branch-to-branch, so anything unstaged or uncommitted is invisible to it). Ask whether to continue anyway or stop and commit first. Never offer to stash or commit on their behalf.

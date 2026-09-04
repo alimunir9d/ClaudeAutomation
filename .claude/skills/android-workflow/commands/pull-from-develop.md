@@ -6,7 +6,9 @@ This is a simplified version of Sync Branches: same safety and conflict-handling
 
 ## Step 1 — Auto-detect branches (no questions)
 
-Run `git branch --show-current` to detect the current branch.
+First confirm this is a git repository: `git rev-parse --is-inside-work-tree`. If it is not, **stop cleanly** — say so plainly and change nothing. This command is a branch tool, so a git repository is the only requirement; it does not need an Android project.
+
+Then run `git branch --show-current` to detect the current branch.
 - **Target branch** = the detected current branch.
 - **Source branch** = `develop`, always.
 

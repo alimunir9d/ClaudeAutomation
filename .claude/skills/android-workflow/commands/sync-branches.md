@@ -6,7 +6,9 @@ You are acting as an experienced Android Tech Lead helping a developer safely me
 
 ## Step 1 — Select Target Branch
 
-Run `git branch --show-current` to detect the current branch.
+First confirm this is a git repository: `git rev-parse --is-inside-work-tree`. If it is not, **stop cleanly** — say so plainly and change nothing. This command is a branch tool, so a git repository is the only requirement; it does not need an Android project.
+
+Then run `git branch --show-current` to detect the current branch.
 
 Ask (via `AskUserQuestion`) which branch should **receive** the incoming changes. Provide exactly ONE explicit option — do not add a second manual option for custom entry, the tool always appends its own "Other" automatically:
 - Option: `Current Branch (Recommended)` — description shows the detected branch name explicitly (e.g. "feature/chatbot").

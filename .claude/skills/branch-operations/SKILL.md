@@ -9,7 +9,7 @@ This is an **entry point, not an implementation.** It skips the Android Workflow
 
 ## What to do
 
-1. Read `.claude/skills/android-workflow/SKILL.md`.
+1. Read `../android-workflow/SKILL.md` — resolved against **this skill's own base directory**, which is given to you when the skill is invoked. This path is sibling-relative on purpose, never project-relative, so it resolves whether the skill tree is installed in a project's `.claude/skills/` or in the user-level `~/.claude/skills/`.
 2. **Skip its main-menu question entirely** — the group is already chosen. Do not ask which workflow to run.
 3. Ask exactly the question defined in that file's **`### Branch Operations follow-up`** section, using its options and their descriptions **verbatim**. That section is the single source of truth for this menu — do not reword, reorder, or reconstruct it from memory.
 4. Then follow that file's **`### After any follow-up`** section for what happens next, including its rule that no selection ends the invocation.

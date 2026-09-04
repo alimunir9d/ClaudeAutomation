@@ -9,8 +9,10 @@ This is an **entry point, not an implementation.** It exists so the command can 
 
 ## What to do
 
-1. Read `.claude/skills/android-workflow/commands/dev-to-main-pr.md` and follow it completely, from its first step to its last.
-2. Treat `.claude/skills/android-workflow/` as the command's **base directory**. Every relative path the command names — notably `references/release-common.md`, which it cites throughout as **§N** — resolves from there, not from this skill's directory.
+1. Read `../android-workflow/commands/dev-to-main-pr.md` — resolved against **this skill's own base directory**, which is given to you when the skill is invoked — and follow it completely, from its first step to its last.
+2. Treat `../android-workflow/` as the command's **base directory**. Every relative path the command names — notably `references/release-common.md`, which it cites throughout as **§N** — resolves from there.
+
+Paths here are sibling-relative on purpose, never project-relative. The skill tree is installed as a unit, so `../android-workflow/` resolves correctly whether that unit sits in a project's `.claude/skills/` or in the user-level `~/.claude/skills/`. Never rewrite these as `.claude/skills/...` — that would bind the skill to one project.
 3. **Skip nothing.** Direct invocation skips menu navigation and nothing else. Every question, preflight check, confirmation and step inside the command runs in order, exactly as it would via the menu — including the `gh` access gate, the remote-only contract, and every confirmation before a remote write.
 
 ## Rules

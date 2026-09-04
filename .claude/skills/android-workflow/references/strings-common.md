@@ -29,6 +29,13 @@ Every `AskUserQuestion` in these workflows is a real gate. If the developer does
 
 ## §1 — Locating the string resources
 
+**Confirm this is an Android project first.** These commands are Android-specific and must not act anywhere else. Before anything, check for both:
+
+- a Gradle project root — `settings.gradle.kts` or `settings.gradle` (or, failing that, a `build.gradle.kts` / `build.gradle`), and
+- at least one Android resource tree — a glob over `**/res/values/strings.xml` returning a result.
+
+If either is missing, **stop cleanly**: say what was looked for, what was found instead, and that nothing was modified. Do not fall back to searching for XML elsewhere, and do not offer to create a resource tree. A skill installed machine-wide will be invoked in non-Android projects by accident, and a clean stop is the correct outcome.
+
 **The English source of truth is the unqualified `res/values/strings.xml`.** Always. If a `values-en/` directory exists it is a *locale override* for English, not the source — treat it as one more target language, never as the origin.
 
 Find candidate files with a glob over `**/res/values*/strings.xml`, then classify each directory by its qualifier.
@@ -41,15 +48,21 @@ Find candidate files with a glob over `**/res/values*/strings.xml`, then classif
 - `values-<lang>-r<REGION>` — with region: `values-pt-rBR`, `values-zh-rTW`
 - `values-b+<lang>+<script>+<region>` — BCP-47 form: `values-b+sr+Latn`, `values-b+zh+Hans+CN`
 
-**Everything else is not a language** and must be excluded, even if it contains a `strings.xml`. Common non-locale qualifiers: `values-night`, `values-v21` (and any `-v<N>`), `values-sw600dp`, `values-w820dp`, `values-land`, `values-port`, `values-hdpi` / `-xhdpi` / `-xxhdpi`, `values-television`, `values-round`. This project has a real `values-night/` directory — it is a UI mode, not Urdu-adjacent, and a filter of "any `values-*`" would wrongly treat it as a language.
+**Everything else is not a language** and must be excluded, even if it contains a `strings.xml`. Common non-locale qualifiers: `values-night`, `values-v21` (and any `-v<N>`), `values-sw600dp`, `values-w820dp`, `values-land`, `values-port`, `values-hdpi` / `-xhdpi` / `-xxhdpi`, `values-television`, `values-round`. These look exactly like locale directories to a naive filter: `values-night` is a UI mode, not a language, and a filter of "any `values-*`" would wrongly treat it as one. Classify by the qualifier grammar above, never by the presence of a hyphen.
 
 When a directory carries both a locale and a non-locale qualifier (`values-es-night`), it is a locale *variant*, not the base translation for that language. Do not sync into it unless it already contains the key being synced; report it in the summary instead.
 
 Resolve each qualifier to a language name before translating (`es` → Spanish, `ur` → Urdu, `pt-rBR` → Brazilian Portuguese). Never translate from the folder name alone if the mapping is unclear — flag it per §6.
 
-Stay within **one module and one source set**. Do not mix `src/main/res` with `src/debug/res` or another module's resources; a key in a different source set is a different resource set, and cross-syncing them is a bug. This project has a single module (`app`) with a single source set (`main`).
+**Detect the module and source-set layout — never assume it.** Android projects range from a single `app` module to dozens of feature modules, and these commands must adapt to whichever they are run in:
 
-Report the inventory before doing any work: the English file, every locale file found, and every `values-*` directory excluded as non-locale.
+1. Group the globbed files by the module and source set they belong to — the path segments before `/src/<sourceSet>/res/`.
+2. If exactly one module–source-set pair contains `res/values/strings.xml`, use it and say so in the inventory.
+3. If more than one does, **ask** (`AskUserQuestion`) which to synchronize, listing each with its resource counts. Do not guess, do not pick the largest, and do not pick the one named `app`.
+
+Then stay within **that one module and source set**. Do not mix `src/main/res` with `src/debug/res`, or one module's resources with another's; a key in a different source set is a different resource, and cross-syncing them is a bug.
+
+Report the inventory before doing any work: the module and source set in use, the English file, every locale file found, and every `values-*` directory excluded as non-locale.
 
 ## §2 — What counts as a translatable string
 
@@ -59,7 +72,7 @@ Report the inventory before doing any work: the English file, every locale file 
 
 **Skip anything marked `translatable="false"`.** That attribute is the project telling you the string is not for translation, and adding it to a locale file would be an error, not a fix.
 
-**Product and brand names are copied verbatim, never transliterated.** `app_name` is the live example in this project: "ClaudeAutomation" stays "ClaudeAutomation" in Spanish and Urdu. Note such entries in the summary so the developer knows they were deliberate copies rather than untranslated oversights.
+**Product and brand names are copied verbatim, never transliterated.** `app_name` is the usual case — whatever the app is called stays spelled that way in every locale rather than being translated or transliterated into each script. Note such entries in the summary so the developer knows they were deliberate copies rather than untranslated oversights.
 
 Strings whose entire value is a resource reference (`@string/other_key`) are aliases — copy the reference as-is rather than translating the text it points at.
 

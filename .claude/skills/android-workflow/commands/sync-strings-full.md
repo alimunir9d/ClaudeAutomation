@@ -18,7 +18,8 @@ Report the inventory before doing anything else:
 
 - The English source file.
 - Every locale file found, with the language each qualifier resolves to.
-- Every `values-*` directory **excluded** as non-locale, naming the qualifier type. Stating the exclusions out loud is what stops `values-night` from being treated as a language.
+- The module and source set in use, and — if the project had more than one candidate — that the developer chose it.
+- Every `values-*` directory **excluded** as non-locale, naming the qualifier type. Stating the exclusions out loud is what stops a UI-mode or density qualifier such as `values-night` from being treated as a language.
 
 If a locale directory exists without a `strings.xml`, note it now — per §5 that is a project decision, not something this command fixes silently.
 

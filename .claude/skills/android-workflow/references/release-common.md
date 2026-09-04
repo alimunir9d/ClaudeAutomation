@@ -54,6 +54,11 @@ The developer's current branch and working-tree state are irrelevant to both com
 
 Run this before anything else in either command.
 
+0. **Confirm the project is suitable.** These are Android release commands operating on a GitHub repository, and they may be invoked anywhere once installed machine-wide. Check, in order:
+   - `git rev-parse --is-inside-work-tree` — if this is not a git repository, **stop cleanly**, say so, and modify nothing.
+   - A Gradle project root — `settings.gradle.kts` / `settings.gradle`, or a `build.gradle(.kts)`. If absent, this is not an Android project; stop and say what was looked for.
+
+   Do not attempt to work around either result. A clean stop with a clear explanation is the correct outcome.
 1. **Check `gh`.** `gh --version`, then `gh auth status`. Every remote write in these workflows goes through the GitHub API, so if `gh` is missing or unauthenticated, **stop the normal path here** and go to §8. Do not continue and do not improvise a local-git substitute.
    - Not installed → tell the developer plainly and give the install command:
 
@@ -83,7 +88,7 @@ Work down this ladder against the branch the calling command names (`origin/deve
 
 1. **README release line.** `git show origin/<branch>:README.md` and look for a line matching `Release: <version>`. This is the convention these commands themselves write, so once one release has been prepared this is the authoritative source.
 2. **Newest remote tag.** `git ls-remote --tags origin`, strip `refs/tags/` and any `^{}` suffix, and sort with version ordering (`git tag --sort=-v:refname` semantics) to find the highest.
-3. **Gradle version name.** `git show origin/<branch>:app/build.gradle.kts` and read `versionName`. Treat this as weak evidence — it is a build identifier, not necessarily the release identifier, and in this project it has never been bumped.
+3. **Gradle version name.** Locate the Android application module's build file on the remote — glob for `**/build.gradle.kts` / `**/build.gradle` and take the one declaring `applicationId` (the module name is *not* always `app`) — then `git show origin/<branch>:<that path>` and read `versionName`. Treat this as weak evidence: it is a build identifier and many projects never bump it in step with releases.
 4. **Ask.** If nothing above yields a version, or the candidates disagree, ask the developer for the release version via `AskUserQuestion` with a free-text answer. If they skip it, stop the command per §0 — a skipped version question does not mean "use your best guess," and there is no safe default for a number that will end up on a tag.
 
 Rules that apply regardless of which rung answered:
@@ -144,17 +149,19 @@ This writes `README.md` on remote `develop` through the GitHub Contents API. It 
    If both fail, the file does not exist on `develop` — that is the create case below.
 2. **Build the new content.**
    - **README exists:** change only the release line. If a `Release: <old>` line is present, replace that one line. If there is no release section, append a `## Release` section at the end. Preserve everything else exactly — no reflowing, no heading renumbering, no formatting cleanup, no unrelated edits. Match the file's existing conventions (heading depth, blank-line style, trailing newline).
-   - **README absent:** create a minimal one — the project name as an H1, one line saying what the project is, and a `## Release` section:
+   - **README absent:** create a minimal one — the project's own name as an H1 and a `## Release` section, nothing more:
 
      ```markdown
-     # ClaudeAutomation
-
-     Android project with Claude Code developer workflow automation.
+     # <detected project name>
 
      ## Release
 
      Release: <version>
      ```
+
+     **Detect the name from the project being released; never hardcode one.** In order: `rootProject.name` from `git show origin/develop:settings.gradle.kts` (or `settings.gradle`); failing that, the repository name parsed from `git remote get-url origin`. If neither resolves, ask the developer rather than inventing a name.
+
+     Do not add a description line. You do not know what the project is, and guessing puts a sentence into someone's README that they never wrote.
 
 3. **Show the developer the exact before/after of the release line** before writing anything. One line each — this is the confirmation that the right version is about to land.
 4. **Write it.** Save the new content to a scratchpad file, base64-encode it, and PUT it:
@@ -242,7 +249,7 @@ Apply to both release commands, at every step:
 - **Never create a release from `develop`.** The tag and the GitHub Release always point at a commit on `origin/main`.
 - **Never overwrite an existing tag** and never create a duplicate release. If either already exists, report and stop.
 - **Never invent release notes.** Every line traces to the diff (§4), or comes from the developer, or comes from the already-confirmed notes of this release (§5). "Do not invent" outranks "produce complete-looking notes" — thin but true beats rich but fabricated.
-- **Never modify any file other than `README.md`.** No `app/build.gradle.kts` version bump, no `gradle.properties`, no CHANGELOG unless the developer explicitly asks for it as a separate action.
+- **Never modify any file other than `README.md`.** No version bump in any module's `build.gradle(.kts)`, no `gradle.properties`, no CHANGELOG unless the developer explicitly asks for it as a separate action.
 - **Never touch local branches or the working tree** (§1). The developer must end both commands standing exactly where they started, with the same uncommitted work they had.
 - **Never assume local refs are current.** Read `origin/...` refs only, after an explicit fetch.
 - **Confirm before every irreversible remote action** — the README commit, the PR creation, the tag creation, the release creation. Show what is about to happen with the concrete values, and wait for a yes.
