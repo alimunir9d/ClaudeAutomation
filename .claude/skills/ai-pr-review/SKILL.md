@@ -1,6 +1,6 @@
 ---
 name: ai-pr-review
-description: Direct entry point for the Android Workflow "AI PR Review" command — a read-only review of the diff between a source branch and a target branch, with a Generic or Events focus. Use only when the user explicitly invokes /ai-pr-review or names this command; general code-review requests belong to the code-review skill instead. Equivalent to Android Workflow → AI PR Review.
+description: Direct entry point for the Android Workflow "AI PR Review" command — a read-only review of the diff between a source branch and a target branch, with a Generic or Events focus. Use only when the user explicitly invokes /ai-pr-review or names this command; general code-review requests belong to the code-review skill instead. Equivalent to Android Workflow → Branch Operations → AI PR Review.
 ---
 
 # Direct Entry: AI PR Review

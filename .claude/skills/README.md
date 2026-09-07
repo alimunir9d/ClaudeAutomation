@@ -5,9 +5,9 @@ Android developer automation with **one implementation per command** and **two w
 The skills are **Android-specific but project-agnostic**. They detect the project they are run in — its modules and source sets, its resource directories, its Gradle configuration, its git remote, its name — and never assume anything about the repository they were originally developed in. Each one also verifies it is somewhere it belongs before doing work, and stops cleanly if not.
 
 ```
-                                 ┌─ /android-workflow → group → command   (hierarchical menu)
+                                 ┌─ /android-workflow → group(s) → command   (hierarchical menu)
 android-workflow/commands/*.md ──┤
-                                 └─ /<command-name>                       (direct entry point)
+                                 └─ /<command-name>                         (direct entry point)
 ```
 
 ## The two kinds of directory here
@@ -16,9 +16,9 @@ android-workflow/commands/*.md ──┤
 
 - `SKILL.md` — the router. Holds the main menu and the group follow-up menus. **This is the single source of truth for every menu.**
 - `commands/*.md` — one file per executable command. **This is the single source of truth for every workflow.** Each file owns its steps, questions, and safety rules.
-- `references/*.md` — shared logic that command files pull in by section number (`§N`). Never dispatched to directly. Three of them: `git-common.md` (branch/remote rules for every git-dependent command, cited as `§G0`–`§G6` — the `G` prefix keeps citations unambiguous for a command that reads two references), `release-common.md`, and `strings-common.md`.
+- `references/*.md` — shared logic that command files pull in by section number (`§N`). Never dispatched to directly. Five of them: `git-common.md` (branch/remote rules for every git-dependent command, cited as `§G0`–`§G6`), `release-common.md`, `strings-common.md`, `design-common.md` (cited as `§D0`–`§D11`), and `design-xml-common.md` (cited as `§X1`–`§X3`). A prefixed citation means the command reads more than one reference and must never have to guess which file a bare `§2` came from — that is why `git-common` carries `G`, and why the Designs pair carry `D` and `X`.
 
-**Every other directory here is a direct entry point** — a thin pointer that exists only so a command can be run without walking the menu. There are ten:
+**Every other directory here is a direct entry point** — a thin pointer that exists only so a command can be run without walking the menu. There are fifteen:
 
 | Entry | Points at |
 |---|---|
@@ -29,9 +29,16 @@ android-workflow/commands/*.md ──┤
 | `create-release` | `commands/create-release.md` |
 | `sync-strings-full` | `commands/sync-strings-full.md` |
 | `sync-strings-fast` | `commands/sync-strings-fast.md` |
+| `design-xml-constraint` | `commands/design-xml-constraint.md` |
+| `design-xml-optimal` | `commands/design-xml-optimal.md` |
+| `design-compose` | `commands/design-compose.md` |
 | `branch-operations` | `SKILL.md` → *Branch Operations follow-up* |
 | `release-workflow` | `SKILL.md` → *Release Workflow follow-up* |
 | `sync-strings` | `SKILL.md` → *Sync Strings follow-up* |
+| `designs` | `SKILL.md` → *Designs follow-up* |
+| `design-xml` | `SKILL.md` → *Designs → XML follow-up* |
+
+Designs is the tree's one **two-level** group, so it has two group entry points: `designs` starts at the XML-or-Compose question, `design-xml` starts one level further in at the ConstraintLayout-Only-or-Optimal question. The skip rule is unchanged at both levels — no selection ends the invocation rather than falling back to the level above.
 
 ## Rules for entry points
 
@@ -91,5 +98,5 @@ Anything added here runs in other people's Android projects, so it must not enco
 - **Detect, never assume** — the project name, module names, source sets, package names, resource layout, version scheme, branch names, and git remote all vary. Read them from the project at run time; ask when detection is ambiguous.
 - **Never emit a name you did not detect.** A hardcoded project name written into another repository's files is the worst failure mode this tree has, because it is silent and it lands in a commit.
 - **Guard the entry.** Android commands verify a Gradle root and a resource tree; git-only commands verify a git repository. Either way, an unsuitable project means stop cleanly, explain what was expected, and change nothing.
-- **Decide whether the command reads branch contents, and be consistent about it.** If it does — a diff, a review, a merge, a release decision — it reads `android-workflow/references/git-common.md`, adds itself to that file's §G0 routing table, takes its branch state from `origin/...` refs, and cites exactly one failure gate (§G3 or §G4). If it doesn't — a command that only reads and writes files in the working project, as Sync Strings does — it must **not** fetch, read remote refs, or ask about remote access, and it says so where its own shared logic lives. Remote-first is a rule about where branch state comes from, not a network dependency to hand every new command.
+- **Decide whether the command reads branch contents, and be consistent about it.** If it does — a diff, a review, a merge, a release decision — it reads `android-workflow/references/git-common.md`, adds itself to that file's §G0 routing table, takes its branch state from `origin/...` refs, and cites exactly one failure gate (§G3 or §G4). If it doesn't — a command that only reads and writes files in the working project, as Sync Strings and Designs do — it must **not** fetch, read remote refs, or ask about remote access, and it says so where its own shared logic lives. Remote-first is a rule about where branch state comes from, not a network dependency to hand every new command.
 - **Stay Android-specific.** These are Android tools. Generalizing them to other platforms is out of scope; being usable in *any Android project* is the goal.
