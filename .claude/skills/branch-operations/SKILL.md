@@ -1,6 +1,6 @@
 ---
 name: branch-operations
-description: Direct entry point for the Android Workflow "Branch Operations" group — presents the choice between Sync Branches and Pull from Develop, then runs the selected one. Use only when the user explicitly invokes /branch-operations or asks for the branch workflow without naming which one. If they already named one, use sync-branches or pull-from-develop instead. Equivalent to entering Android Workflow and picking Branch Operations.
+description: Direct entry point for the Android Workflow "Branch Operations" group — presents the choice between Sync Branches, Pull from Develop and AI PR Review, then runs the selected one. Use only when the user explicitly invokes /branch-operations or asks for the branch workflow without naming which one. If they already named one, use sync-branches, pull-from-develop or ai-pr-review instead. Equivalent to entering Android Workflow and picking Branch Operations.
 ---
 
 # Direct Entry: Branch Operations

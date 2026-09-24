@@ -20,10 +20,11 @@ This file governs commands that read branch *contents*. It does **not** govern c
 | `dev-to-main-pr` | yes | **§G4** (Gate B) |
 | `create-release` | yes | **§G4** (Gate B) |
 | `sync-strings-full` / `sync-strings-fast` | **no — purely local** | none; never asks about remote access |
+| `design-xml-constraint` / `design-xml-optimal` / `design-compose` | **no — purely local** | none; never asks about remote access |
 
 Each command cites exactly one gate. Look it up here rather than deciding at runtime which gate applies — the moment a fetch has just failed is the worst moment to be classifying the command you are running.
 
-**Purely local commands are genuinely out of scope.** A command that operates on the working project's own files must not fetch, must not read `origin/...` refs, and must never ask the developer about remote access or repository state. Sync Strings is the standing example: it compares `strings.xml` files on disk, so there is no branch content in its decision and nothing here applies to it. See `references/strings-common.md`.
+**Purely local commands are genuinely out of scope.** A command that operates on the working project's own files must not fetch, must not read `origin/...` refs, and must never ask the developer about remote access or repository state. Sync Strings is the standing example: it compares `strings.xml` files on disk, so there is no branch content in its decision and nothing here applies to it. See `references/strings-common.md`. Designs is the same case — it implements a design into layouts and Composables on disk. See `references/design-common.md`.
 
 Growing the menu: a new command that reads branch contents adds a row here and cites one gate. A new purely-local command adds a row saying so. "Remote is the source of truth" is not a blanket rule that every skill inherits — it is a rule about *where branch state comes from*, and it binds only the commands that use branch state.
 
