@@ -9,7 +9,7 @@ Two properties define this command, and both must be stated to the developer up 
 1. **It operates entirely against the remote.** No branch is checked out, nothing is merged locally, no local commit is created, and the developer's working tree is never touched. The remote is the source of truth — local `develop` and local `main` are ignored completely, because in this clone they are routinely stale.
 2. **It never merges the PR.** Creating the PR is where this command ends. A human reviews and merges it.
 
-All shared behavior lives in `references/release-common.md`, referenced below as **§N**. Read that file before starting. Do not restate or re-implement its logic here.
+All shared behavior lives in `references/release-common.md`, referenced below as **§N**, and the tree-wide git rules live in `references/git-common.md`, referenced as **§GN**. Read both files before starting. Do not restate or re-implement their logic here.
 
 Follow the steps below in order — do not skip or reorder them.
 
@@ -65,7 +65,7 @@ Show the exact before/after of the release line, then confirm before writing. If
 
 There is no separate commit step. The Contents API call in §6 **is** the commit — it creates `chore(release): prepare release <version>` directly on remote `develop`.
 
-Report the returned commit sha, then `git fetch origin` and confirm `origin/develop` now points at it. If the API call conflicted because `develop` moved, follow §6's conflict handling — re-read, rebuild, show the developer what changed. Never retry by dropping the `sha` guard.
+Report the returned commit sha, then `git fetch origin --prune --tags` (§G2) and confirm `origin/develop` now points at it. If the API call conflicted because `develop` moved, follow §6's conflict handling — re-read, rebuild, show the developer what changed. Never retry by dropping the `sha` guard.
 
 ## Step 6 — Create the Dev → Main PR
 
@@ -118,7 +118,7 @@ All of **§9 — Shared safety rules** applies. The ones this command is most li
 - **A skipped question ends the command** (§0). No selection is not permission to proceed with the recommended option or the version you detected. Stop, and disclose anything already written to the remote.
 - **Never merge the PR**, and never offer to. Creating it is the end of the job.
 - **Never checkout, merge, or commit locally.** The release-preparation commit is created on the remote through the API. The developer's branch and working tree must be exactly as they were when the command started (§1).
-- **Never read local `develop` or local `main`.** Every ref in this command is an `origin/...` ref, after an explicit fetch. A bare `develop` anywhere here is a bug.
+- **Never read local `develop` or local `main`** (`git-common.md` §G1). Every ref in this command is an `origin/...` ref, after a fetch that succeeded — a ref resolving is not evidence it is fresh (§G2). A bare `develop` anywhere here is a bug.
 - **Never modify any file other than `README.md`** — no `versionName` bump, no `gradle.properties`, no CHANGELOG.
 - **Never invent release notes.** If the diff doesn't support a line, the line doesn't ship.
 - **Never proceed without `gh`.** If it isn't available, take the §8 fallback and say clearly that nothing was created.
