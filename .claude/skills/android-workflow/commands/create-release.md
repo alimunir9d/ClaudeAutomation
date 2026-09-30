@@ -11,7 +11,7 @@ Two properties define this command:
 
 This command is independent of Dev → Main PR: it does not invoke it, and it typically runs in a fresh session with none of its state in memory. Everything it needs is recovered from the remote.
 
-All shared behavior lives in `references/release-common.md`, referenced below as **§N**. Read that file before starting. Do not restate or re-implement its logic here.
+All shared behavior lives in `references/release-common.md`, referenced below as **§N**, and the tree-wide git rules live in `references/git-common.md`, referenced as **§GN**. Read both files before starting. Do not restate or re-implement their logic here.
 
 Follow the steps below in order — do not skip or reorder them.
 
@@ -25,7 +25,7 @@ Say up front that this command will not touch the developer's current branch or 
 
 Confirm the release actually landed in `main` before doing anything irreversible.
 
-1. `git fetch origin --prune --tags` (already done in §2 — do not skip it if you arrived here another way).
+1. `git fetch origin --prune --tags` (§G2 — already done in §2, but do not skip it if you arrived here another way). **Check its exit status:** non-zero → **§G4 (Gate B)**, `Retry` / `Cancel`. Everything below reads `origin/...` refs, so continuing on cached refs would verify the release against a state that may no longer exist.
 2. `git log --oneline origin/main -5` — look for the merge of the release PR and the `chore(release): prepare release <version>` commit.
 3. `git show origin/main:README.md` — the release line should be present on `main`.
 4. `git log --oneline origin/main..origin/develop` — expected to be empty, or to contain only work committed *after* the release merged.
